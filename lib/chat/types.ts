@@ -19,6 +19,7 @@ export type Message = {
     user: User
     room: Room
     content: string
+    created_at: string
 
     // timestamps included too
 } 

@@ -1,5 +1,12 @@
+<script>
+import { UApp } from "#components";
+import "./assets/globals.css"
+</script>
+
 <template>
-    <NuxtLayout>
-        <NuxtPage />
-    </NuxtLayout>
+    <UApp>
+        <NuxtLayout>
+            <NuxtPage />
+        </NuxtLayout>
+    </UApp>
 </template>
