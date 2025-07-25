@@ -1,28 +1,36 @@
 <script setup lang="ts">
 import { type Channel, Socket } from "phoenix";
+import type { SocketError } from "~/lib/chat/errors";
 import type { Message } from "~/lib/chat/types";
 
 const route = useRoute();
+const toast = useToast();
 const channel = ref<Channel | null>(null);
 const message = ref("");
 const messages = ref<Message[]>([]);
 const currentUser = ref("Anonymous");
-const room = ref("room:" + route.params.roomId);
-
 const socket = ref<Socket | null>(null);
+const room = useState("currentRoomName", () => "");
 
 function initSocket() {
     if (!socket.value) return;
 
-    channel.value = socket.value.channel(room.value, {});
+    channel.value = socket.value.channel(room.value, {
+        token: "penis",
+    });
 
     channel.value
         .join()
         .receive("ok", ({ messages: _initialMessages }) => {
             // messages.value = initialMessages
         })
-        .receive("error", ({ error }) => {
-            console.error(error);
+        .receive("error", ({ error }: { error: SocketError }) => {
+            toast.add({
+                title: error.title,
+                color: "error",
+            });
+
+            return navigateTo("/chat/lobby");
         });
 
     channel.value.on("new_message", (msg: Message) => {
@@ -37,13 +45,14 @@ const sendMessage = (msg: string) => {
 
     channel.value.push("new_message", {
         user: currentUser.value,
-        content: message.value,
+        content: msg,
     });
 
     message.value = "";
 };
 
 onMounted(async () => {
+    room.value = "room:" + route.params.roomId;
     messages.value = [];
     socket.value = new Socket("ws://localhost:4000/chat", {
         params: {
@@ -60,32 +69,25 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-    sendMessage(`${currentUser} вышел из лобби`)
+    // sendMessage(`${currentUser.value} вышел из лобби`)
     socket.value?.disconnect();
 });
-
 </script>
 
-
 <template>
-    <div class="flex flex-col h-screen justify-between">
-        <header class="p-4 border-b border-neutral-800">
-            <p>
-                {{ room }}
-            </p>
-        </header>
-        <main class="flex-1 p-4">
-            <div>
-                <ul>
-                    <li v-for="message in messages">
-                        <MessageLi :message="message" />
-                    </li>
-                </ul>
-            </div>
-        </main>
-        <div class="p-4 space-y-2">
-            <UTextarea class="w-full" v-model="message" />
-            <UButton variant="subtle" size="xs" @click="() => sendMessage(message)">Отправить</UButton>
+    <main class="flex-1 p-4">
+        <div>
+            <ul>
+                <li v-for="message in messages" :key="message.id">
+                    <MessageLi :message="message" />
+                </li>
+            </ul>
         </div>
+    </main>
+    <div class="p-4 space-y-2">
+        <UTextarea class="w-full" v-model="message" />
+        <UButton variant="subtle" size="xs" @click="() => sendMessage(message)"
+            >Отправить</UButton
+        >
     </div>
 </template>
