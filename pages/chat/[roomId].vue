@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { type Channel, Socket } from "phoenix";
+import { TOKEN_COOKIE_KEY } from "~/lib/auth";
 import type { SocketError } from "~/lib/chat/errors";
 import type { Message } from "~/lib/chat/types";
 
@@ -11,12 +12,13 @@ const messages = ref<Message[]>([]);
 const currentUser = ref("Anonymous");
 const socket = ref<Socket | null>(null);
 const room = useState("currentRoomName", () => "");
+const token = useCookie(TOKEN_COOKIE_KEY);
 
 function initSocket() {
     if (!socket.value) return;
 
     channel.value = socket.value.channel(room.value, {
-        token: "penis",
+        token: token.value,
     });
 
     channel.value
@@ -29,6 +31,8 @@ function initSocket() {
                 title: error.title,
                 color: "error",
             });
+
+            console.error(error)
 
             return navigateTo("/chat/lobby");
         });
@@ -54,9 +58,10 @@ const sendMessage = (msg: string) => {
 onMounted(async () => {
     room.value = "room:" + route.params.roomId;
     messages.value = [];
+
     socket.value = new Socket("ws://localhost:4000/chat", {
         params: {
-            token: "penis",
+            token: token.value,
         },
     });
 
@@ -86,8 +91,6 @@ onUnmounted(() => {
     </main>
     <div class="p-4 space-y-2">
         <UTextarea class="w-full" v-model="message" />
-        <UButton variant="subtle" size="xs" @click="() => sendMessage(message)"
-            >Отправить</UButton
-        >
+        <UButton variant="subtle" size="xs" @click="() => sendMessage(message)">Отправить</UButton>
     </div>
 </template>

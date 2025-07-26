@@ -21,7 +21,6 @@ type ApiError = {
     error: string;
 };
 
-const cookie = useCookie(TOKEN_COOKIE_KEY);
 
 const state = reactive({
     email: "",
@@ -34,6 +33,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
     const response = await fetch("http://localhost:4000/api/login", {
         method: "POST",
+        credentials: 'include',
         headers: {
             "Content-Type": "application/json",
         },
@@ -52,12 +52,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         return;
     }
 
-    const data: { token: string } = await response.json();
-    cookie.value = data.token;
-
     toast.add({
         title: "Успех!",
-        description: "The form has been submitted.",
+        description: "Вы успешно вошли в систему.",
         color: "success",
     });
 }
