@@ -1,3 +1,5 @@
+import type { CommonRoomData } from "../chat/types"
+
 type CreateRoomResponse = {
     topic: string
     ok: true
@@ -31,6 +33,42 @@ export async function createRoom(name: string): Promise<CreateRoomResponse> {
         return { ok: false, error: json.error }
     } catch (e) {
         return { ok: false, error: "непредвиденная ошибка" }
+    }
+
+}
+
+type GetRoomInfoResponse = {
+    ok: true
+} & CommonRoomData | {
+    ok: false
+    error: string
+}
+
+export async function getRoomInfo(topic: string): Promise<GetRoomInfoResponse> {
+    const response = await fetch("http://localhost:4000/api/rooms/" + topic, {
+        method: "GET",
+        credentials: "include"
+    })
+
+    if (response.ok) {
+        const json: CommonRoomData = await response.json()
+        return {
+            ok: true,
+            ...json
+        }
+    }
+
+    try {
+        const { error }: { error: string } = await response.json()
+        return {
+            ok: false,
+            error
+        }
+    } catch (e) {
+        return {
+            ok: false,
+            error: "кажется, вы сломали сервер!"
+        }
     }
 
 }

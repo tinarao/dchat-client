@@ -21,7 +21,14 @@ async function handleCreateRoom() {
         })
 
         await navigateTo("/chat/" + result.topic)
+        return
     }
+
+    toast.add({
+        title: "ошибка!",
+        description: result.error,
+        color: "error"
+    })
 }
 </script>
 

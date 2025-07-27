@@ -2,8 +2,6 @@
 import * as v from "valibot";
 import type { FormSubmitEvent } from "@nuxt/ui";
 
-import { TOKEN_COOKIE_KEY } from "~/lib/auth";
-
 definePageMeta({
     layout: "blank",
 });
@@ -27,6 +25,7 @@ const state = reactive({
     password: "",
 });
 
+const { query } = useRoute()
 const toast = useToast();
 async function onSubmit(event: FormSubmitEvent<Schema>) {
     event.preventDefault();
@@ -57,16 +56,18 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         description: "Вы успешно вошли в систему.",
         color: "success",
     });
+
+    if (query.callbackUrl) {
+        await navigateTo(query.callbackUrl.toString())
+    } else {
+        await navigateTo("/chat/lobby")
+    }
 }
 </script>
 
 <template>
-    <UForm
-        :schema="schema"
-        :state="state"
-        class="flex flex-col h-screen items-center justify-center"
-        @submit="onSubmit"
-    >
+    <UForm :schema="schema" :state="state" class="flex flex-col h-screen items-center justify-center"
+        @submit="onSubmit">
         <div class="space-y-2">
             <UFormField label="e-mail" name="email">
                 <UInput v-model="state.email" class="w-80" />

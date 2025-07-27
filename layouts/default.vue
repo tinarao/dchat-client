@@ -1,21 +1,16 @@
-<script setup lang="ts">
-import { createRoom } from '~/lib/rooms';
-
-const currentRoomName = useState('currentRoomName', () => "")
-</script>
-
 <template>
     <div class="flex flex-col h-screen justify-between">
         <header class="flex items-center justify-between p-4 border-b border-neutral-800">
-            <p class="text-info">
-                {{ currentRoomName || "загрузка..." }}
-            </p>
+            <room-label-switchable />
 
-            <create-room-popover>
-                <template #trigger>
-                    <UButton size="sm" variant="outline" icon="i-lucide-plus">создать комнату</UButton>
-                </template>
-            </create-room-popover>
+            <div class="flex items-center gap-x-2">
+                <create-room-popover>
+                    <template #trigger>
+                        <UButton size="sm" variant="outline" icon="i-lucide-plus">создать комнату</UButton>
+                    </template>
+                </create-room-popover>
+                <auth-popover />
+            </div>
         </header>
         <slot />
     </div>

@@ -7,5 +7,9 @@ export default defineNuxtConfig({
     devtools: { enabled: true },
     vite: { plugins: [tailwindcss(), ui()] },
     css: ["~/assets/globals.css"],
-    modules: ['@nuxt/ui', '@nuxt/image', '@nuxt/eslint']
+    modules: ['@nuxt/ui', '@nuxt/image', '@nuxt/eslint'],
+
+    runtimeConfig: {
+        apiUrl: "http://localhost:4000/api"
+    }
 })
