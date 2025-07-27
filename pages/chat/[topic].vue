@@ -19,13 +19,14 @@ const sendMessage = (msg: string) => {
 
     if (!room.value.allowAnonyms && currentUser.value.id === 0) {
         toast.add({
-            title: "в комнате запрещена анонимная отправка сообщений"
-        })
-        return
+            title: "в комнате запрещена анонимная отправка сообщений",
+            color: "error",
+        });
+        return;
     }
 
     channel.value.push("new_message", {
-        user: currentUser.value,
+        token: token.value,
         content: msg,
     });
 
@@ -37,7 +38,6 @@ onMounted(async () => {
 
     let topic = route.params.topic.toString();
     if (!topic.startsWith("room:")) topic = "room:" + topic;
-
 
     messages.value = [];
 
@@ -65,7 +65,7 @@ onMounted(async () => {
         token: token.value,
     });
 
-    await getRoom(topic)
+    await getRoom(topic);
 
     channel.value
         .join()
@@ -96,8 +96,13 @@ onUnmounted(() => {
     <main class="flex-1 p-4">
         <div>
             <ul>
-                <li class="pb-2" v-for="msg in messages" :key="msg.content + msg.createdAt + new Date().toISOString()
-                    ">
+                <li
+                    class="pb-2"
+                    v-for="msg in messages"
+                    :key="
+                        msg.content + msg.createdAt + new Date().toISOString()
+                    "
+                >
                     <MessageLi :message="msg" />
                 </li>
             </ul>
@@ -105,7 +110,12 @@ onUnmounted(() => {
     </main>
     <div class="p-4 space-y-2">
         <UTextarea v-model="newMessage" class="w-full" />
-        <UButton variant="subtle" size="xs" @click="() => sendMessage(newMessage)">
-            Отправить</UButton>
+        <UButton
+            variant="subtle"
+            size="xs"
+            @click="() => sendMessage(newMessage)"
+        >
+            Отправить</UButton
+        >
     </div>
 </template>

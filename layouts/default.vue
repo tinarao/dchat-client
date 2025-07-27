@@ -6,9 +6,10 @@
             <div class="flex items-center gap-x-2">
                 <create-room-popover>
                     <template #trigger>
-                        <UButton size="sm" variant="outline" icon="i-lucide-plus">создать комнату</UButton>
+                        <UButton size="sm" variant="outline" icon="i-lucide-plus" />
                     </template>
                 </create-room-popover>
+                <my-rooms-popover />
                 <auth-popover />
             </div>
         </header>
