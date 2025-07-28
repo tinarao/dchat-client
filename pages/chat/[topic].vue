@@ -9,7 +9,7 @@ const { currentUser, me } = useCurrentUser();
 const { room, getRoom } = useRoomInfo();
 const { initConnection, killConnection, sendMessage } = useSocket()
 
-const handleSendMessage = (msg: string) => {
+async function handleSendMessage(msg: string) {
     if (msg.trim() === "") return;
 
     if (!room.value.allowAnonyms && currentUser.value.id === 0) {
@@ -20,7 +20,14 @@ const handleSendMessage = (msg: string) => {
         return;
     }
 
-    sendMessage("new_message", msg)
+    const result = await sendMessage("new_message", msg)
+    if (result && result.error) {
+        toast.add({
+            title: "ошибка!",
+            description: result.error,
+            color: "error"
+        })
+    }
 
     newMessage.value = "";
 };
@@ -34,39 +41,53 @@ onMounted(async () => {
         me(),
         initConnection({
             topic: topic,
-            onError(error) {
+            async onError(error) {
+                console.log(error)
                 toast.add({
                     title: "ошибка!",
                     description: error,
                     color: "error"
                 })
+
+                await navigateTo("/chat/lobby")
             },
-            onConnect() {
-                toast.add({
-                    title: "соединение установлено!",
-                    color: "info"
-                })
+            onConnect(initialMessages) {
+                if (Array.isArray(initialMessages)) {
+                    messages.value = initialMessages
+                }
             },
             onMessage(message) {
                 messages.value.push(message)
             },
         })
     ])
-
-    messages.value = [];
 });
 
 onUnmounted(() => {
     killConnection()
 });
+
+const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault()
+        handleSendMessage(newMessage.value)
+    }
+}
+
+onMounted(() => {
+    window.addEventListener('keydown', handleKeyDown)
+})
+
+onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeyDown)
+})
 </script>
 
 <template>
     <main class="flex-1 p-4">
         <div>
             <ul>
-                <li class="pb-2" v-for="msg in messages" :key="msg.content + msg.createdAt + new Date().toISOString()
-                    ">
+                <li class="pb-2" v-for="msg in messages" :key="msg.id">
                     <MessageLi :message="msg" />
                 </li>
             </ul>

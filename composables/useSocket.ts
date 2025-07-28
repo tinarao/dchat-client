@@ -10,7 +10,7 @@ type SocketMessageType =
 
 type InitConnectionArgs = {
     topic: string
-    onConnect: () => void
+    onConnect: (messages: Message[]) => void
     onError: (error: string) => void
     onMessage: (message: Message) => void
 }
@@ -22,13 +22,28 @@ export function useSocket() {
     const config = useAppConfig()
     const topic = ref<string | undefined>(channel.value?.topic)
 
-    async function sendMessage(messageType: SocketMessageType, message: string) {
-        if (!channel.value) return;
+    type SendMessageReturn = {
+        error?: string
+    }
+    async function sendMessage(messageType: SocketMessageType, message: string): Promise<SendMessageReturn> {
+        if (!channel.value) {
+            return {
+                error: "нет соединения с каналом"
+            }
+        };
 
-        channel.value.push(messageType, {
-            token: token.value,
-            content: message,
-        });
+        return new Promise((resolve) => {
+            channel.value?.push(messageType, {
+                token: token.value,
+                content: message,
+            })
+                .receive("ok", (_resp) => {
+                    resolve({ error: undefined })
+                })
+                .receive("error", ({ reason }) => {
+                    resolve({ error: reason })
+                });
+        })
     }
 
     async function initConnection({ topic, onConnect, onError, onMessage }: InitConnectionArgs) {
@@ -52,10 +67,11 @@ export function useSocket() {
 
         channel.value
             .join()
-            .receive("ok", ({ _message }: { _message: Message }) => {
-                onConnect()
+            .receive("ok", ({ messages }: { messages: Message[] }) => {
+                onConnect(messages)
             })
             .receive("error", (error) => {
+                console.log(error)
                 if (error.error.title) {
                     onError(error.error.title as string)
                     return

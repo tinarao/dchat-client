@@ -12,11 +12,12 @@ export type Room = {
 };
 
 export type Message = {
-    // id?: number
+    id: number
     user: User;
     // room: Room
     content: string;
-    createdAt: string;
+    inserted_at: string;
+    updated_at: string;
 };
 
 export type CommonRoomData = {

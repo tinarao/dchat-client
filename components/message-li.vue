@@ -9,7 +9,7 @@ const dtf = Intl.DateTimeFormat("ru", {
     timeStyle: "short",
     dateStyle: "short"
 })
-const datetime = dtf.format(new Date(message.createdAt))
+const datetime = dtf.format(new Date(message.inserted_at))
 </script>
 
 <template>

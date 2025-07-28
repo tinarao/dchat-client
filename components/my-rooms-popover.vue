@@ -7,7 +7,13 @@ const { currentUser } = useCurrentUser()
 
 onMounted(async () => {
     const result = await getMyChats()
-    rooms.value = result.rooms
+    rooms.value = [...result.rooms, {
+        name: "Lobby",
+        topic: "room:lobby",
+        id: 0,
+        allowAnonyms: true,
+        creatorId: 0
+    }]
 })
 </script>
 

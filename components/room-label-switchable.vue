@@ -4,10 +4,7 @@ import { getApiUrl } from '~/lib/utils'
 const { room, getRoom } = useRoomInfo()
 const { currentUser } = useCurrentUser()
 const toast = useToast()
-const themesArray = ref(["name", "topic", "json"])
-const theme = ref('json')
 const isCreator = ref(false)
-const newAllowAnonymous = ref(room.value.allowAnonyms)
 
 watch(room, () => {
     if (room.value.id === 0 || currentUser.value.id === 0) {
@@ -20,8 +17,8 @@ watch(room, () => {
     }
 })
 
-watch(newAllowAnonymous, async () => {
-    const route = getApiUrl(`/rooms/allow_anonyms/${room.value.id}/${newAllowAnonymous.value}`)
+async function handleChangeAllowAnonyms() {
+    const route = getApiUrl(`/rooms/allow_anonyms/${room.value.id}/${!room.value.allowAnonyms}`)
     const response = await fetch(route, {
         method: "PATCH",
         credentials: "include"
@@ -29,35 +26,40 @@ watch(newAllowAnonymous, async () => {
 
     if (response.ok) {
         toast.add({
-            title: "настройки комнаты изменены!"
+            title: "настройки комнаты изменены!",
         })
+
+        await getRoom(room.value.topic)
         return
     }
+}
 
-    await getRoom(room.value.topic)
-})
+
 </script>
 
 <template>
     <div class="flex items-center gap-x-4 text-info font-bold group">
-        <p v-if="theme === 'name'">
-            {{ room.name ?? "загрузка..." }}
-        </p>
-        <p v-else-if="theme === 'topic'">
-            {{ room.topic ?? "загрузка..." }}
-        </p>
-        <p v-else>
-            {{ room }}
-        </p>
+        <u-popover>
+            <u-button>{{ room.name }}</u-button>
 
-        <u-select v-model="theme" :items="themesArray" size="sm" variant="soft" :highlight="false"></u-select>
-
+            <template #content>
+                <div class="p-2">
+                    <ul>
+                        <li>{{ room.topic }}</li>
+                        <li v-if="room.allowAnonyms">анонимные сообщения разрешены</li>
+                        <li v-else>анонимные сообщения запрещены</li>
+                    </ul>
+                </div>
+            </template>
+        </u-popover>
         <u-popover v-if="isCreator">
             <u-button icon="i-lucide-pen" color="neutral" size="sm" variant="subtle" />
 
             <template #content>
                 <div class="p-2">
-                    <u-switch v-model="newAllowAnonymous" label="Разрешить анонимные сообщения" />
+                    {{ String(room.allowAnonyms) }}
+                    <u-switch @click="handleChangeAllowAnonyms" :default-value="room.allowAnonyms"
+                        label="Разрешить анонимные сообщения" />
                 </div>
             </template>
         </u-popover>
