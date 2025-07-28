@@ -21,7 +21,7 @@ const items = ref<DropdownMenuItem[]>([
     <u-button v-if="currentUser.id === 0" variant="soft" :to="loginUrl">
         войти
     </u-button>
-    <u-dropdown-menu :items="items">
+    <u-dropdown-menu v-else :items="items">
         <u-button variant="soft"> {{ currentUser.username }}</u-button>
     </u-dropdown-menu>
 </template>

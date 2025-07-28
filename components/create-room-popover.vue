@@ -1,9 +1,20 @@
 <script setup lang="ts">
-import { createRoom } from '~/lib/rooms'
+import { createRoom } from '~/lib/chat'
 
 const name = ref("")
 const toast = useToast()
+const { currentUser } = useCurrentUser()
 async function handleCreateRoom() {
+    if (currentUser.value.id === 0) {
+        toast.add({
+            title: "ошибка!",
+            description: "авторизуйтесь, чтобы создавать комнаты",
+            color: "error",
+            onClick: async () => await navigateTo("/login")
+        })
+        return
+    }
+
     if (!name.value) {
         toast.add({
             title: "ошибка!",

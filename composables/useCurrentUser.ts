@@ -1,4 +1,5 @@
 import { AnonymousUser } from "~/lib/auth"
+import { getApiUrl } from "~/lib/utils";
 
 export type CommonUserData = {
     username: string,
@@ -19,7 +20,8 @@ export default function useCurrentUser() {
     async function me() {
         loading.value = true
         try {
-            const response = await fetch("http://localhost:4000/api/me", {
+            const route = getApiUrl("/me")
+            const response = await fetch(route, {
                 credentials: "include"
             })
 

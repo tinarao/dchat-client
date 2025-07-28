@@ -1,5 +1,5 @@
+import { getRoomInfo } from "~/lib/chat";
 import type { CommonRoomData } from "~/lib/chat/types";
-import { getRoomInfo } from "~/lib/rooms";
 
 export function useRoomInfo() {
     const room = useState<CommonRoomData>("currentRoomName", () => (

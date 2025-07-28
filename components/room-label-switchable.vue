@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { getApiUrl } from '~/lib/utils'
 
 const { room, getRoom } = useRoomInfo()
 const { currentUser } = useCurrentUser()
@@ -20,12 +21,11 @@ watch(room, () => {
 })
 
 watch(newAllowAnonymous, async () => {
-    const response = await fetch("http://localhost:4000/api/rooms/allow_anonyms/" + room.value.id + "/" + newAllowAnonymous.value, {
+    const route = getApiUrl(`/rooms/allow_anonyms/${room.value.id}/${newAllowAnonymous.value}`)
+    const response = await fetch(route, {
         method: "PATCH",
         credentials: "include"
     })
-
-    console.log(response)
 
     if (response.ok) {
         toast.add({
@@ -35,8 +35,6 @@ watch(newAllowAnonymous, async () => {
     }
 
     await getRoom(room.value.topic)
-    // does not refresh
-
 })
 </script>
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import * as v from "valibot";
 import type { FormSubmitEvent } from "@nuxt/ui";
+import { getApiUrl } from "~/lib/utils";
 
 definePageMeta({
     layout: "blank",
@@ -30,7 +31,8 @@ const toast = useToast();
 async function onSubmit(event: FormSubmitEvent<Schema>) {
     event.preventDefault();
 
-    const response = await fetch("http://localhost:4000/api/login", {
+    const route = getApiUrl("/login")
+    const response = await fetch(route, {
         method: "POST",
         credentials: 'include',
         headers: {
