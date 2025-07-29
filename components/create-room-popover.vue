@@ -48,10 +48,12 @@ async function handleCreateRoom() {
         <slot name="trigger" />
 
         <template #content>
-            <div class="flex items-center space-x-2 p-2">
-                <UInput class="w-80" placeholder="введите название новой комнаты" v-model="name" />
-                <UButton @click="handleCreateRoom" title="нажмите, чтобы создать комнату" icon="i-lucide-plus"
-                    variant="subtle"></UButton>
+            <div>
+                <div class="flex items-center space-x-2 p-2">
+                    <UInput class="w-80" placeholder="введите название новой комнаты" v-model="name" />
+                    <UButton @click="handleCreateRoom" title="нажмите, чтобы создать комнату" icon="i-lucide-plus"
+                        variant="subtle"></UButton>
+                </div>
             </div>
         </template>
     </UPopover>
