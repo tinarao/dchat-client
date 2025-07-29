@@ -45,7 +45,6 @@ async function handleChangeAllowAnonyms() {
             <template #content>
                 <div class="p-2">
                     <ul>
-                        <li>{{ room.topic }}</li>
                         <li v-if="room.allowAnonyms">анонимные сообщения разрешены</li>
                         <li v-else>анонимные сообщения запрещены</li>
                     </ul>
