@@ -15,4 +15,6 @@
         </header>
         <slot />
     </div>
+
+    <PassphraseModal />
 </template>

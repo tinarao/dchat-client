@@ -15,7 +15,6 @@
         "@nuxt/ui": "3.2.0",
         "@tailwindcss/vite": "^4.1.11",
         "eslint": "^9.0.0",
-        "libsodium-wrappers": "^0.7.15",
         "localforage": "^1.10.0",
         "nuxt": "^3.17.7",
         "phoenix": "^1.7.21",

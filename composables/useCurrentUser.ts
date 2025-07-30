@@ -28,7 +28,7 @@ export default function useCurrentUser() {
             if (response.ok) {
                 const data: MeResponse = await response.json()
                 currentUser.value = data.user
-                return
+                return currentUser.value
             }
 
             currentUser.value = AnonymousUser
@@ -37,6 +37,7 @@ export default function useCurrentUser() {
             currentUser.value = AnonymousUser
         } finally {
             loading.value = false
+            return currentUser.value
         }
     }
 

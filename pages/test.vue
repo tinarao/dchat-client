@@ -1,16 +1,12 @@
 <script setup lang="ts">
 
-
 definePageMeta({
     layout: "blank"
 })
 
 const e2ee = useE2EE()
 
-const passphrase = ref("жопа")
-
 onMounted(async () => {
-    const master = await e2ee.generateMasterKey("penis", "aboba")
     const myKeyPair = await e2ee.generateKeyPair(master)
     await e2ee.saveKeyPair(myKeyPair)
 

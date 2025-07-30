@@ -34,6 +34,10 @@ const storeKeys = {
 
 const PBKDF2_ITERATIONS = 310000
 
+// Самый оптимальный способ его хранить
+// TODO попробовать Workers
+let masterKey: CryptoKey | null = null
+
 /**
 *   Composable for end-to-end encryption.
 *
@@ -52,6 +56,10 @@ const PBKDF2_ITERATIONS = 310000
 *
 */
 export function useE2EE() {
+    function isMasterKeyPresent() {
+        return !!masterKey
+    }
+
     async function generateMasterKey(passphrase: string, saltMaterial: string): Promise<CryptoKey> {
         // соль всегда фиксированна
         // позволяет генерить совместимые ключи для поддержки истории сообщений
@@ -65,8 +73,6 @@ export function useE2EE() {
         // const salt = new TextEncoder().encode(saltMaterial)
         //
         // проверочная фраза нигде не сохраняется
-
-        saltMaterial.concat("")
 
         const salt = new TextEncoder().encode(saltMaterial)
         const keyMaterial = await crypto.subtle.importKey(
@@ -238,7 +244,8 @@ export function useE2EE() {
         deriveSharedSecret,
         encryptMessage,
         decryptMessage,
-        rotateKeys
+        rotateKeys,
+        isMasterKeyPresent
     }
 }
 
