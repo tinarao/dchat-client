@@ -1,21 +1,39 @@
 <script setup lang="ts">
-const { me } = useCurrentUser()
-const { showModal } = usePassphraseModal()
+const route = useRoute()
+const { getSecretChats, chats } = useSecretChats()
 const e2e = useE2EE()
-const user = await me();
 const isOk = ref(false)
 
-onMounted(() => {
+onMounted(async () => {
     if (!e2e.isMasterKeyPresent()) {
-        showModal()
+        return navigateTo("/passphrase?then=" + route.path)
     }
+
+    await getSecretChats()
+    console.log(chats.value)
+    isOk.value = true
 })
 
 </script>
 
 <template>
-    {{ user }}
-    <div v-if="isOk">
-        some private data ooof
+    <div v-if="isOk" class="h-full grid grid-cols-5">
+        <div class="border-r h-full border-neutral-800">
+            <ul v-if="chats.length !== 0">
+                <li v-for="chat in chats">
+                    {{ chat.first_user }}
+                </li>
+            </ul>
+            <div v-else>
+                <p>Кажется, у вас нет приватных чатов.</p>
+            </div>
+
+            <CreateSecretChatPopover>
+                <template #trigger>
+                    <UButton variant="subtle" color="neutral">Создать</UButton>
+                </template>
+            </CreateSecretChatPopover>
+        </div>
+        <div></div>
     </div>
 </template>

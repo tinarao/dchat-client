@@ -56,8 +56,10 @@ let masterKey: CryptoKey | null = null
 *
 */
 export function useE2EE() {
+    // TODO verify this thing is safe enough
+    const mk = useState<CryptoKey | null>("mk", () => null)
     function isMasterKeyPresent() {
-        return !!masterKey
+        return !!mk.value
     }
 
     async function generateMasterKey(passphrase: string, saltMaterial: string): Promise<CryptoKey> {
@@ -85,7 +87,7 @@ export function useE2EE() {
 
         await store.setItem(storeKeys.MASTER_SALT, arrayToBase64(salt))
 
-        return crypto.subtle.deriveKey(
+        const key = await crypto.subtle.deriveKey(
             {
                 name: "PBKDF2",
                 salt,
@@ -97,6 +99,9 @@ export function useE2EE() {
             false,
             ["encrypt", "decrypt"]
         )
+
+        mk.value = key
+        return key
     }
 
     async function generateKeyPair(masterKey: CryptoKey): Promise<KeyPair> {

@@ -1,20 +1,24 @@
 <script setup lang="ts">
 import { getDoneReadPassphraseInfo, saveDoneReadPassphraseInfo } from '~/lib/utils'
 
-const { isOpen, closeModal } = usePassphraseModal()
 const { currentUser } = useCurrentUser()
 const e2e = useE2EE()
 const toast = useToast()
+const route = useRoute()
 
 const loading = ref(false)
 const showInfoBlock = ref(true)
 const passphrase = ref("")
+
+const IS_OPEN = true
 
 onMounted(() => {
     showInfoBlock.value = !getDoneReadPassphraseInfo()
 })
 
 async function handleGenerateKeys() {
+    const redirectTo = route.query.then?.toString()
+
     const masterKey = await e2e.generateMasterKey(passphrase.value, "".concat(currentUser.value.id.toString(), currentUser.value.username))
     const keyPair = await e2e.generateKeyPair(masterKey)
     await e2e.saveKeyPair(keyPair)
@@ -24,12 +28,12 @@ async function handleGenerateKeys() {
         description: "набор ключей успешно сгенерирован."
     })
 
-    closeModal()
+    await navigateTo(redirectTo || "/secret-chat")
 }
 </script>
 
 <template>
-    <UModal :dismissible="false" v-model:open="isOpen" title="Генерация мастер ключа"
+    <UModal :dismissible="false" v-model:open="IS_OPEN" title="Генерация мастер ключа"
         description="Для надёжного шифрования необходима контрольная фраза">
         <template #body>
             <div v-if="showInfoBlock" class="space-y-2">

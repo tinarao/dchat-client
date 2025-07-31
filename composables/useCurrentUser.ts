@@ -1,4 +1,4 @@
-import { AnonymousUser } from "~/lib/auth"
+import { AnonymousUser, getCurrentUser } from "~/lib/auth"
 import { getApiUrl } from "~/lib/utils";
 
 export type CommonUserData = {
@@ -20,18 +20,8 @@ export default function useCurrentUser() {
     async function me() {
         loading.value = true
         try {
-            const route = getApiUrl("/me")
-            const response = await fetch(route, {
-                credentials: "include"
-            })
-
-            if (response.ok) {
-                const data: MeResponse = await response.json()
-                currentUser.value = data.user
-                return currentUser.value
-            }
-
-            currentUser.value = AnonymousUser
+            const user = await getCurrentUser()
+            currentUser.value = user
         } catch (e) {
             console.error(e)
             currentUser.value = AnonymousUser

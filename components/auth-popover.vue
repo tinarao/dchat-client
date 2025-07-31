@@ -7,7 +7,6 @@ const loginUrl = "/login?callbackUrl=" + route.path
 
 await me()
 
-
 const items = ref<DropdownMenuItem[]>([
     {
         label: 'выйти',
