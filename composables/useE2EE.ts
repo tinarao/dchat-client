@@ -1,17 +1,11 @@
 import localforage from "localforage"
+import type { EncryptedMessage } from "~/lib/secret-chat"
 
 type KeyPair = {
     publicKey: JsonWebKey
     encryptedPrivateKey: string
     iv: string
     createdAt: string
-}
-
-type EncryptedMessage = {
-    iv: string
-    cipherText: string
-    salt: string
-    keyVersion: string
 }
 
 type StoredKeys = {

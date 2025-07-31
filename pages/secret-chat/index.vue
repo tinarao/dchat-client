@@ -19,11 +19,9 @@ onMounted(async () => {
 <template>
     <div v-if="isOk" class="h-full grid grid-cols-5">
         <div class="border-r h-full border-neutral-800">
-            <ul v-if="chats.length !== 0">
-                <li v-for="chat in chats">
-                    {{ chat.first_user }}
-                </li>
-            </ul>
+            <div v-if="chats.length !== 0">
+                <PrivateChatCard v-for="chat in chats" :chat="chat" />
+            </div>
             <div v-else>
                 <p>Кажется, у вас нет приватных чатов.</p>
             </div>

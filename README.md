@@ -10,3 +10,4 @@ WIP
 
 todo:
 - ui rework
+- "may we use your password as your passphrase?"

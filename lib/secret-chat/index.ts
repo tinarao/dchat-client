@@ -1,15 +1,21 @@
 import { getApiUrl } from "../utils";
 import type { Result } from "../result";
-import SecretChat from "~/pages/secret-chat.vue";
 
-type SecretChatsUser = {
-    id: string
+export type SecretChatsUser = {
+    id: number
     username: string
 }
 
 export type SecretChat = {
     first_user: SecretChatsUser
     second_user: SecretChatsUser
+}
+
+export type EncryptedMessage = {
+    iv: string
+    cipherText: string
+    salt: string
+    keyVersion: string
 }
 
 export async function getMySecretChats(): Promise<Result<SecretChat[]>> {

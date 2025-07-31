@@ -8,8 +8,11 @@ type SocketMessageType =
     "ok" |
     "error"
 
+type SocketChannel = "chat" | "secret-chat"
+
 type InitConnectionArgs = {
     topic: string
+    socketChannel?: SocketChannel
     onConnect: (messages: Message[]) => void
     onError: (error: string) => void
     onMessage: (message: Message) => void
@@ -25,7 +28,7 @@ export function useSocket() {
     type SendMessageReturn = {
         error?: string
     }
-    async function sendMessage(messageType: SocketMessageType, message: string): Promise<SendMessageReturn> {
+    async function sendMessage(messageType: SocketMessageType, message: any): Promise<SendMessageReturn> {
         if (!channel.value) {
             return {
                 error: "нет соединения с каналом"
