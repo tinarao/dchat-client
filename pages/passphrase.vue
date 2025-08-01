@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { createNewKey } from '~/lib/keys'
 import { getDoneReadPassphraseInfo, saveDoneReadPassphraseInfo } from '~/lib/utils'
 
 const { currentUser } = useCurrentUser()
@@ -22,6 +23,17 @@ async function handleGenerateKeys() {
     const masterKey = await e2e.generateMasterKey(passphrase.value, "".concat(currentUser.value.id.toString(), currentUser.value.username))
     const keyPair = await e2e.generateKeyPair(masterKey)
     await e2e.saveKeyPair(keyPair)
+
+    const { error } = await createNewKey(keyPair.publicKey)
+    if (error) {
+        console.log(error)
+        toast.add({
+            title: "ошибка!",
+            description: "возникла ошибка при обновлении ключей",
+            color: "error"
+        })
+        return
+    }
 
     toast.add({
         title: "успешно!",

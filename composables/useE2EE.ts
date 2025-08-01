@@ -141,10 +141,14 @@ export function useE2EE() {
         return keyPairId // return id of just saved key
     }
 
-    async function getCurrentKeyPair(masterKey: CryptoKey): Promise<{
+    async function getCurrentKeyPair(): Promise<{
         publicKey: JsonWebKey,
         privateKey: JsonWebKey
     }> {
+        if (!mk.value) {
+            throw new Error("No master key found")
+        }
+
         const stored = await store.getItem<StoredKeys>(storeKeys.KEY_PAIR)
         if (!stored) throw new Error("No keys found")
 
@@ -153,7 +157,7 @@ export function useE2EE() {
 
         const decrypted = await crypto.subtle.decrypt(
             { name: 'AES-GCM', iv: base64ToArray(keyPair.iv) },
-            masterKey,
+            mk.value,
             base64ToArray(keyPair.encryptedPrivateKey)
         )
 
