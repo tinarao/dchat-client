@@ -1,4 +1,3 @@
-import localforage from "localforage"
 import type { EncryptedMessage } from "~/lib/secret-chat"
 
 type KeyPair = {
@@ -13,25 +12,15 @@ type StoredKeys = {
     keyPairs: Record<string, KeyPair>
 }
 
-const STORAGE_INSTANCE_KEY = "e2ee-keys" as const;
+export const STORAGE_INSTANCE_KEY = "e2ee-keys" as const;
 const KEY_STORAGE_VERSION = "v1"
-
-const store = localforage.createInstance({
-    name: STORAGE_INSTANCE_KEY
-})
 
 const storeKeys = {
     MASTER_KEY: "master-key",
-    MASTER_SALT: "master-salt",
     KEY_PAIR: "key-pair"
 } as const;
 
 const PBKDF2_ITERATIONS = 310000
-
-// Самый оптимальный способ его хранить
-// TODO попробовать Workers
-let masterKey: CryptoKey | null = null
-
 /**
 *   Composable for end-to-end encryption.
 *
@@ -50,13 +39,57 @@ let masterKey: CryptoKey | null = null
 *
 */
 export function useE2EE() {
-    // TODO verify this thing is safe enough
-    const mk = useState<CryptoKey | null>("mk", () => null)
-    function isMasterKeyPresent() {
-        return !!mk.value
+    const { $store } = useNuxtApp()
+
+    // TODO
+    async function saveSharedSecret() {
+        // generate ID and save to sharedSecretHistory
+        //
+        // example:
+        // const id = crypto.randomUUID()
+        // $store.set(id, sharedSecret)
+        //
+        // потом при расшифровке смотреть ID shared secret'а и декодить по нему
     }
 
-    async function generateMasterKey(passphrase: string, saltMaterial: string): Promise<CryptoKey> {
+    async function loadSharedSecretFromHistory(id: string) { }
+
+
+    async function isMasterKeyPresent() {
+        return !!(await $store.getItem(storeKeys.MASTER_KEY))
+    }
+
+    async function saveMasterKey(masterKey: CryptoKey) {
+        // ПРОБЛЕМНАЯ СТРОКА
+        const jwk = await crypto.subtle.exportKey('jwk', masterKey)
+        // КОНЕЦ ПРОБЛЕМНОЙ СТРОКИ
+
+        await $store.setItem(storeKeys.MASTER_KEY, jwk)
+    }
+
+    async function getMasterKey() {
+        const raw = await $store.getItem<JsonWebKey>(storeKeys.MASTER_KEY)
+        if (!raw) return null
+
+        const deserialized = await crypto.subtle.importKey(
+            "jwk",
+            raw,
+            { name: "AES-GCM", length: 256 },
+            true,
+            ["encrypt", "decrypt"]
+        )
+
+        return deserialized
+    }
+
+    async function clearAllKeysData() {
+        return await Promise.all([
+            $store.removeItem(storeKeys.MASTER_KEY),
+            $store.removeItem(storeKeys.KEY_PAIR)
+        ])
+    }
+
+    async function generateMasterKey(passphrase: string, saltMaterial: string) {
         // соль всегда фиксированна
         // позволяет генерить совместимые ключи для поддержки истории сообщений
         //
@@ -79,8 +112,6 @@ export function useE2EE() {
             ["deriveKey"]
         )
 
-        await store.setItem(storeKeys.MASTER_SALT, arrayToBase64(salt))
-
         const key = await crypto.subtle.deriveKey(
             {
                 name: "PBKDF2",
@@ -90,15 +121,19 @@ export function useE2EE() {
             },
             keyMaterial,
             { name: "AES-GCM", length: 256 },
-            false,
+            true,
             ["encrypt", "decrypt"]
         )
 
-        mk.value = key
-        return key
+        await saveMasterKey(key)
     }
 
-    async function generateKeyPair(masterKey: CryptoKey): Promise<KeyPair> {
+    async function generateKeyPair(): Promise<KeyPair> {
+        const masterKey = await getMasterKey()
+        if (!masterKey) {
+            throw new Error("Keys expired and/or corrupted")
+        }
+
         const keyPair = await crypto.subtle.generateKey(
             {
                 name: "ECDH",
@@ -128,7 +163,7 @@ export function useE2EE() {
     }
 
     async function saveKeyPair(keyPair: KeyPair) {
-        const existing = (await store.getItem<StoredKeys>(storeKeys.KEY_PAIR)) || {
+        const existing = (await $store.getItem<StoredKeys>(storeKeys.KEY_PAIR)) || {
             currentKeyPairId: '',
             keyPairs: {}
         }
@@ -137,7 +172,7 @@ export function useE2EE() {
         existing.keyPairs[keyPairId] = keyPair
         existing.currentKeyPairId = keyPairId
 
-        await store.setItem(storeKeys.KEY_PAIR, existing)
+        await $store.setItem(storeKeys.KEY_PAIR, existing)
         return keyPairId // return id of just saved key
     }
 
@@ -145,11 +180,12 @@ export function useE2EE() {
         publicKey: JsonWebKey,
         privateKey: JsonWebKey
     }> {
-        if (!mk.value) {
-            throw new Error("No master key found")
+        const masterKey = await getMasterKey()
+        if (!masterKey) {
+            throw new Error("Keys expired and/or corrupted")
         }
 
-        const stored = await store.getItem<StoredKeys>(storeKeys.KEY_PAIR)
+        const stored = await $store.getItem<StoredKeys>(storeKeys.KEY_PAIR)
         if (!stored) throw new Error("No keys found")
 
         const keyPair = stored.keyPairs[stored.currentKeyPairId]
@@ -157,7 +193,7 @@ export function useE2EE() {
 
         const decrypted = await crypto.subtle.decrypt(
             { name: 'AES-GCM', iv: base64ToArray(keyPair.iv) },
-            mk.value,
+            masterKey,
             base64ToArray(keyPair.encryptedPrivateKey)
         )
 
@@ -226,8 +262,8 @@ export function useE2EE() {
         return new TextDecoder().decode(decrypted)
     }
 
-    async function rotateKeys(masterKey: CryptoKey) {
-        const newKeyPair = await generateKeyPair(masterKey)
+    async function rotateKeys() {
+        const newKeyPair = await generateKeyPair()
         return saveKeyPair(newKeyPair)
     }
 
@@ -236,7 +272,9 @@ export function useE2EE() {
     }
 
     function base64ToArray(str: string) {
-        return new Uint8Array(atob(str).split('').map(c => c.charCodeAt(0)))
+        const binaryStr = atob(str)
+        const arr = new Uint8Array(binaryStr.length).map((_, i) => binaryStr.charCodeAt(i))
+        return arr
     }
 
     return {
@@ -248,7 +286,8 @@ export function useE2EE() {
         encryptMessage,
         decryptMessage,
         rotateKeys,
-        isMasterKeyPresent
+        isMasterKeyPresent,
+        clearAllKeysData
     }
 }
 

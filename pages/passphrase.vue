@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { createNewKey } from '~/lib/keys'
+import { createNewKey, getPersonPublicKey } from '~/lib/keys'
 import { getDoneReadPassphraseInfo, saveDoneReadPassphraseInfo } from '~/lib/utils'
 
 const { currentUser } = useCurrentUser()
@@ -21,7 +21,7 @@ async function handleGenerateKeys() {
     const redirectTo = route.query.then?.toString()
 
     const masterKey = await e2e.generateMasterKey(passphrase.value, "".concat(currentUser.value.id.toString(), currentUser.value.username))
-    const keyPair = await e2e.generateKeyPair(masterKey)
+    const keyPair = await e2e.generateKeyPair()
     await e2e.saveKeyPair(keyPair)
 
     const { error } = await createNewKey(keyPair.publicKey)

@@ -6,20 +6,22 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     const token = useCookie(TOKEN_COOKIE_KEY)
     const headers = useRequestHeaders(['cookie'])
 
-    if (paths.includes(to.path)) {
-        const response = await fetch(
-            getApiUrl("/me"),
-            {
-                credentials: "include",
-                headers: {
-                    "cookie": headers.cookie ?? ""
+    for (const path of paths) {
+        if (to.path.startsWith(path)) {
+            const response = await fetch(
+                getApiUrl("/me"),
+                {
+                    credentials: "include",
+                    headers: {
+                        "cookie": headers.cookie ?? ""
+                    }
                 }
+            )
+
+            if (!response.ok) {
+                return navigateTo('/login?callbackUrl=' + from.path)
             }
-        )
-
-        if (!response.ok) {
-            return navigateTo('/login?callbackUrl=' + from.path)
         }
-
     }
+
 })

@@ -11,11 +11,17 @@ export type SecretChat = {
     second_user: SecretChatsUser
 }
 
+export type SecretChatWithID = { id: number } & SecretChat
+
 export type EncryptedMessage = {
     iv: string
     cipherText: string
     salt: string
     keyVersion: string
+
+    // after db
+    inserted_at?: string
+    updated_at?: string
 }
 
 export async function getMySecretChats(): Promise<Result<SecretChat[]>> {
@@ -33,7 +39,7 @@ export async function getMySecretChats(): Promise<Result<SecretChat[]>> {
     }
 }
 
-export async function getSecretChatWith(withUsername: string): Promise<Result<{ id: number }>> {
+export async function getSecretChatWith(withUsername: string): Promise<Result<SecretChatWithID>> {
     const response = await fetch(getApiUrl("/secret_chats/with/" + withUsername), {
         credentials: "include"
     })
@@ -43,6 +49,6 @@ export async function getSecretChatWith(withUsername: string): Promise<Result<{ 
     }
 
 
-    const { id }: { id: number } = await response.json()
-    return { ok: true, data: { id } }
+    const data: SecretChatWithID = await response.json()
+    return { ok: true, data }
 }

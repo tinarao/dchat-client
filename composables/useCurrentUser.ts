@@ -1,5 +1,4 @@
 import { AnonymousUser, getCurrentUser } from "~/lib/auth"
-import { getApiUrl } from "~/lib/utils";
 
 export type CommonUserData = {
     username: string,

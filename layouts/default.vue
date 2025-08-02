@@ -9,6 +9,7 @@
                         <UButton size="sm" variant="outline" icon="i-lucide-plus" />
                     </template>
                 </create-room-popover>
+                <UButton href="/secret-chat" size="xs" variant="outline" icon="i-lucide-key" color="neutral" label="секретные чаты" />
                 <my-rooms-popover />
                 <auth-popover />
             </div>

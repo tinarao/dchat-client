@@ -20,3 +20,11 @@ export async function getCurrentUser() {
 
     return AnonymousUser
 }
+
+export async function logout() {
+    const route = getApiUrl("/logout")
+    await fetch(route, {
+        method: "DELETE",
+        credentials: "include"
+    })
+}

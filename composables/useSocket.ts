@@ -1,6 +1,7 @@
 import { Channel, Socket } from "phoenix"
 import { TOKEN_COOKIE_KEY } from "~/lib/auth"
 import type { Message } from "~/lib/chat/types"
+import type { EncryptedMessage } from "~/lib/secret-chat"
 
 type SocketMessageType =
     "new_message" |
@@ -13,16 +14,18 @@ type SocketChannel = "chat" | "secret-chat"
 type InitConnectionArgs = {
     topic: string
     socketChannel?: SocketChannel
-    onConnect: (messages: Message[]) => void
+    onConnect?: (messages: Message[]) => void
+    onEncrConnect?: (messages: EncryptedMessage[]) => void
     onError: (error: string) => void
-    onMessage: (message: Message) => void
+    onMessage?: (message: Message) => void
+    onEncrMessage?: (message: EncryptedMessage) => void
 }
 
 export function useSocket() {
     const token = useCookie(TOKEN_COOKIE_KEY)
+    const config = useAppConfig()
     const socket = ref<Socket | null>(null)
     const channel = ref<Channel | null>(null)
-    const config = useAppConfig()
     const topic = ref<string | undefined>(channel.value?.topic)
 
     type SendMessageReturn = {
@@ -49,7 +52,7 @@ export function useSocket() {
         })
     }
 
-    async function initConnection({ topic, onConnect, onError, onMessage }: InitConnectionArgs) {
+    async function initConnection({ topic, socketChannel, onConnect, onEncrConnect, onError, onMessage, onEncrMessage }: InitConnectionArgs) {
         socket.value = new Socket(config.wsChatUrl, {
             params: {
                 token: token.value,
@@ -70,8 +73,14 @@ export function useSocket() {
 
         channel.value
             .join()
-            .receive("ok", ({ messages }: { messages: Message[] }) => {
-                onConnect(messages)
+            .receive("ok", ({ messages }) => {
+                if (socketChannel === "chat") {
+                    messages = messages as Message[]
+                    onConnect?.(messages)
+                } else {
+                    messages = messages as EncryptedMessage[]
+                    onEncrConnect?.(messages)
+                }
             })
             .receive("error", (error) => {
                 console.log(error)
@@ -83,8 +92,14 @@ export function useSocket() {
                 onError("произошла непредвиденная ошибка.")
             });
 
-        channel.value.on("new_message", (msg: Message) => {
-            onMessage(msg)
+        channel.value.on("new_message", (msg: any) => {
+            if (socketChannel === "chat") {
+                msg = msg as Message
+                onMessage?.(msg)
+            } else if (socketChannel === "secret-chat") {
+                msg = msg as EncryptedMessage
+                onEncrMessage?.(msg)
+            }
         });
     }
 

@@ -2,6 +2,7 @@
 import * as v from "valibot";
 import type { FormSubmitEvent } from "@nuxt/ui";
 import { getApiUrl } from "~/lib/utils";
+import { createNewKey } from "~/lib/keys";
 
 definePageMeta({
     layout: "blank",
@@ -20,12 +21,12 @@ type ApiError = {
     error: string;
 };
 
-
 const state = reactive({
     email: "",
     password: "",
 });
 
+const e2e = useE2EE()
 const { query } = useRoute()
 const toast = useToast();
 async function onSubmit(event: FormSubmitEvent<Schema>) {
@@ -60,9 +61,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     });
 
     if (query.callbackUrl) {
-        await navigateTo(query.callbackUrl.toString())
+        await navigateTo("/keys?callbackUrl=" + query.callbackUrl)
     } else {
-        await navigateTo("/chat/lobby")
+        await navigateTo("/keys")
     }
 }
 </script>
